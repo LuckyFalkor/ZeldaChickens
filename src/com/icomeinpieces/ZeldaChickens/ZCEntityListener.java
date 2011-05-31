@@ -13,52 +13,55 @@ import org.bukkit.event.entity.EntityListener;
 
 public class ZCEntityListener extends EntityListener
 {
-	//private ZeldaChickens ZCP;
+	public ZeldaChickens ZCP;
 	public Vector<Chicken> chickens = new Vector<Chicken>();
-	private int deadChickens=0;
+	private int chickenAttacks=0;
 	public ZCEntityListener(ZeldaChickens instance)
 	{
-	    //ZCP = instance;
+	    ZCP = instance;
 	}
 
 	public void onEntityDamage(EntityDamageEvent event)
 	{
-		EntityDamageByEntityEvent EDBEevent = null;
-		Player player = null;
-		boolean passedChecks = true;
-		if (event instanceof EntityDamageByEntityEvent)
+		if(!event.isCancelled())
 		{
-			EDBEevent = (EntityDamageByEntityEvent) event;
-		}
-		if (EDBEevent != null)
-		{
-			if (EDBEevent.getDamager() instanceof Player)
+			EntityDamageByEntityEvent EDBEevent = null;
+			Player player = null;
+			boolean passedChecks = true;
+			if (event instanceof EntityDamageByEntityEvent)
 			{
-				player = (Player) EDBEevent.getDamager();
+				EDBEevent = (EntityDamageByEntityEvent) event;
+			}
+			if (EDBEevent != null)
+			{
+				if (EDBEevent.getDamager() instanceof Player)
+				{
+					player = (Player) EDBEevent.getDamager();
+				}
+				else
+				{
+					passedChecks=false;
+				}
+				if(!(EDBEevent.getEntity() instanceof Chicken)) passedChecks=false;
 			}
 			else
 			{
 				passedChecks=false;
 			}
-			if(!(EDBEevent.getEntity() instanceof Chicken)) passedChecks=false;
-		}
-		else
-		{
-			passedChecks=false;
-		}
-		if(passedChecks)
-		{
-			if (chickens.isEmpty()) deadChickens++;
-			if (deadChickens >= 2) summonChickens(player);
+			if(passedChecks)
+			{
+				if (chickens.isEmpty()) chickenAttacks++;
+				if (chickenAttacks >= ZCP.chickenAttacksTrigger) summonChickens(player);
+			}
 		}
 	}
 	
 	private void summonChickens(Player player)
 	{
 		Location locale = player.getLocation();
-		locale.setY(locale.getY()+1);
+		locale.setY(locale.getY()+ZCP.spawnHeight);
 		int spawnCount = 0;
-		while (spawnCount <10)
+		while (spawnCount < ZCP.mobSize)
 		{
 		chickens.add((Chicken) locale.getWorld().spawnCreature(locale, CreatureType.CHICKEN));
 		chickens.elementAt(spawnCount).setTarget(player);
@@ -67,6 +70,6 @@ public class ZCEntityListener extends EntityListener
 		t.start();
 		spawnCount++;
 		}
-		deadChickens=0;
+		chickenAttacks=0;
 	}
 }

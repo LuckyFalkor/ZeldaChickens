@@ -23,12 +23,12 @@ public class ZCchickens implements Runnable
 			Double xDistance = Math.abs(player.getLocation().getX() - chicken.getLocation().getX());
 			Double yDistance = Math.abs(player.getLocation().getY() - chicken.getLocation().getY());
 			Double zDistance = Math.abs(player.getLocation().getZ() - chicken.getLocation().getZ());
-			if(xDistance < 1 && yDistance < 1 && zDistance < 1) player.damage(1, chicken);
+			if(xDistance < ZCE.ZCP.damageDistance && yDistance < ZCE.ZCP.damageDistance && zDistance < ZCE.ZCP.damageDistance) player.damage(ZCE.ZCP.mobDamage, chicken);
 			try {
 				Thread.sleep(500);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (InterruptedException e) 
+			{
+
 			}
 		}
 		ZCE.chickens.remove(chicken);
