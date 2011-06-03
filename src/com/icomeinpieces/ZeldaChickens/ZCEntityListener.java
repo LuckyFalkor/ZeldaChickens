@@ -25,34 +25,34 @@ public class ZCEntityListener extends EntityListener
 	{
 		if(!event.isCancelled())
 		{
-			EntityDamageByEntityEvent EDBEevent = null;
-			Player player = null;
-			boolean passedChecks = true;
-			if (event instanceof EntityDamageByEntityEvent)
-			{
-				EDBEevent = (EntityDamageByEntityEvent) event;
-			}
-			if (EDBEevent != null)
-			{
-				if (EDBEevent.getDamager() instanceof Player)
+				EntityDamageByEntityEvent EDBEevent = null;
+				Player player = null;
+				boolean passedChecks = true;
+				if (event instanceof EntityDamageByEntityEvent)
 				{
-					player = (Player) EDBEevent.getDamager();
+					EDBEevent = (EntityDamageByEntityEvent) event;
+				}
+				if (EDBEevent != null)
+				{
+					if (EDBEevent.getDamager() instanceof Player)
+					{
+						player = (Player) EDBEevent.getDamager();
+					}
+					else
+					{
+						passedChecks=false;
+					}
+					if(!(EDBEevent.getEntity() instanceof Chicken)) passedChecks=false;
 				}
 				else
 				{
 					passedChecks=false;
 				}
-				if(!(EDBEevent.getEntity() instanceof Chicken)) passedChecks=false;
-			}
-			else
-			{
-				passedChecks=false;
-			}
-			if(passedChecks)
-			{
-				if (chickens.isEmpty()) chickenAttacks++;
-				if (chickenAttacks >= ZCP.chickenAttacksTrigger) summonChickens(player);
-			}
+				if(passedChecks && (ZCP).permissionHandler.has(player, "zc.chickenswarm"))
+				{
+					if (chickens.isEmpty()) chickenAttacks++;
+					if (chickenAttacks >= ZCP.chickenAttacksTrigger) summonChickens(player);
+				}
 		}
 	}
 	

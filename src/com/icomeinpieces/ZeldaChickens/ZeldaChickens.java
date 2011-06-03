@@ -16,6 +16,9 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 
 /*
  * Changelog
+ * 1.04 changed how the permissions worked
+ * 1.03 added catch up functionality for chickens
+ * 1.02 - added permissions support
  * 1.01 - added config file
  * 1.00 - initial release
  */
@@ -23,10 +26,10 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 public class ZeldaChickens extends JavaPlugin
 {
 	public final Logger log = Logger.getLogger("Minecraft");
-	private final String pluginName = "ZeldaChicken V.1.01";
+	private final String pluginName = "ZeldaChicken V.1.04";
 	public final ZCEntityListener zcEntityListner = new ZCEntityListener(this);
 	public final ZCPlayerListener zcPlayerListener = new ZCPlayerListener(this);
-	public static PermissionHandler permissionHandler;
+	public PermissionHandler permissionHandler;
 	private PluginManager pm;
 	private String filePath = "/ZeldaChickens.cfg";
 	
@@ -35,6 +38,8 @@ public class ZeldaChickens extends JavaPlugin
 	public Integer chickenAttacksTrigger = 2;
 	public Double damageDistance = 1.0;
 	public Double spawnHeight=1.0;
+	public Double maxDistance = 4.0;
+	public Boolean catchUp= true;
 
 	public void onDisable() 
 	{
@@ -75,6 +80,9 @@ public class ZeldaChickens extends JavaPlugin
 	        if (damageDistance == null || damageDistance <=0.0) damageDistance =1.0;
 	        spawnHeight = Double.parseDouble(config.getProperty("chickenSpawnHeight"));
 	        if (spawnHeight == null || spawnHeight <=0.0) spawnHeight=1.0;
+	        catchUp = Boolean.parseBoolean(config.getProperty("catchUpEnabled"));
+	        maxDistance = Double.parseDouble(config.getProperty("maxOutRunDistance"));
+	        if (maxDistance == null || maxDistance <=0) maxDistance=8.0;
 	        }
 	        catch (IOException e)
 	        {
@@ -114,17 +122,26 @@ public class ZeldaChickens extends JavaPlugin
 	        	 out.println("#(valid values, anything above 0) default: 10");
 	        	 out.println("chickenMobSize="+mobSize);
 	        	 out.println("#how much damage should a chicken do?");
-	        	 out.println("#(valid values between 1-10) default: 1(or half heart)");
+	        	 out.println("#(valid values between 1-10) default: 2(1 = half heart)");
 	        	 out.println("chickenDamage="+mobDamage);
 	        	 out.println("#how many attacks on chicken(s) should it take before a mob spawns?");
 	        	 out.println("#(valid values, anything above 0) default: 2");
 	        	 out.println("chickenHitsTrigger="+chickenAttacksTrigger);
-	        	 out.println("#how close do chickens have to be to do damage?");
-	        	 out.println("#(valid values are and above 0.0) default: 1");
+	        	 out.println("#how close do chickens have to be to do damage? (1 = one block");
+	        	 out.println("#(valid values are and above 0.0) default: 1.0");
 	        	 out.println("chickenAttackRange=" + damageDistance);
 	        	 out.println("#how far above the player should the chickens fall from onto unspecting players?");
-	        	 out.println("#(valid values, anything above 0) default: 1");
-	        	 out.println("chickenSpawnHeight="+spawnHeight);	        	 
+	        	 out.println("#(valid values, anything above 0.0) default: 1.0");
+	        	 out.println("chickenSpawnHeight="+spawnHeight);
+	        	 out.println("#are chickens allowed to 'catch-up' to a player if they are getting outrun?");
+	        	 out.println("#(valid values, true or false only) default: true, anythign but true or True will result in false");
+	        	 out.println("catchUpEnabled="+catchUp);
+	        	 out.println("#how far can a player outrun a chicken before it catches up? (respawns above player using chickenSpawnHeight.");
+	        	 out.println("#(valid values, anything above 0.0) default: 4.0");
+	        	 out.println("maxOutRunDistance="+maxDistance);
+	        	 out.println("#");
+	        	 out.println("#permission nodes:");
+	        	 out.println("zc.chickenswarm <-- people with this permission will be suceptable to attacks. those without are immune");
 		         out.close();
 		    	 log.info(pluginName + " config file written to " + filePath);
 	         }
@@ -142,9 +159,9 @@ public class ZeldaChickens extends JavaPlugin
 	private boolean setupPermissions() {
 	      Plugin permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
 
-	      if (ZeldaChickens.permissionHandler == null) {
+	      if (permissionHandler == null) {
 	          if (permissionsPlugin != null) {
-	        	  ZeldaChickens.permissionHandler = ((Permissions) permissionsPlugin).getHandler();
+	        	  permissionHandler = ((Permissions) permissionsPlugin).getHandler();
 	              log.info(pluginName + ": Permission system detected");
 	              return true;
 	          } else {
