@@ -16,6 +16,7 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 
 /*
  * Changelog
+ * 1.05 added chicken retargeting, if a player under attack dies and respawns the remainder of the chicken mob resumes the attack.
  * 1.04 changed how the permissions worked
  * 1.03 added catch up functionality for chickens
  * 1.02 - added permissions support
@@ -26,7 +27,7 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 public class ZeldaChickens extends JavaPlugin
 {
 	public final Logger log = Logger.getLogger("Minecraft");
-	private final String pluginName = "ZeldaChicken V.1.04";
+	private final String pluginName = "ZeldaChicken V.1.05";
 	public final ZCEntityListener zcEntityListner = new ZCEntityListener(this);
 	public final ZCPlayerListener zcPlayerListener = new ZCPlayerListener(this);
 	public PermissionHandler permissionHandler;
@@ -40,6 +41,7 @@ public class ZeldaChickens extends JavaPlugin
 	public Double spawnHeight=1.0;
 	public Double maxDistance = 4.0;
 	public Boolean catchUp= true;
+	public Boolean deathAfterDeath = false;
 
 	public void onDisable() 
 	{
@@ -83,6 +85,7 @@ public class ZeldaChickens extends JavaPlugin
 	        catchUp = Boolean.parseBoolean(config.getProperty("catchUpEnabled"));
 	        maxDistance = Double.parseDouble(config.getProperty("maxOutRunDistance"));
 	        if (maxDistance == null || maxDistance <=0) maxDistance=8.0;
+	        deathAfterDeath = Boolean.parseBoolean(config.getProperty("poofAfterDeath"));
 	        }
 	        catch (IOException e)
 	        {
@@ -139,6 +142,9 @@ public class ZeldaChickens extends JavaPlugin
 	        	 out.println("#how far can a player outrun a chicken before it catches up? (respawns above player using chickenSpawnHeight.");
 	        	 out.println("#(valid values, anything above 0.0) default: 4.0");
 	        	 out.println("maxOutRunDistance="+maxDistance);
+	        	 out.println("#should chickens go poof after a player dies? (or retarget)");
+	        	 out.println("#(valid values, true or false only) default: false (meaning the chickens will go after a same target once he/she respawns)");
+	        	 out.println("poofAfterDeath="+deathAfterDeath);
 	        	 out.println("#");
 	        	 out.println("#permission nodes:");
 	        	 out.println("zc.chickenswarm <-- people with this permission will be suceptable to attacks. those without are immune");

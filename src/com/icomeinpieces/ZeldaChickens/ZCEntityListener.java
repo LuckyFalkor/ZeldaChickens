@@ -14,7 +14,7 @@ import org.bukkit.event.entity.EntityListener;
 public class ZCEntityListener extends EntityListener
 {
 	public ZeldaChickens ZCP;
-	public Vector<Chicken> chickens = new Vector<Chicken>();
+	public Vector<ZCchickens> chickens = new Vector<ZCchickens>();
 	private int chickenAttacks=0;
 	public ZCEntityListener(ZeldaChickens instance)
 	{
@@ -63,12 +63,13 @@ public class ZCEntityListener extends EntityListener
 		int spawnCount = 0;
 		while (spawnCount < ZCP.mobSize)
 		{
-		chickens.add((Chicken) locale.getWorld().spawnCreature(locale, CreatureType.CHICKEN));
-		chickens.elementAt(spawnCount).setTarget(player);
-		//chickens[spawnCount]
-		Thread t=new Thread(new ZCchickens(chickens.elementAt(spawnCount), this));
-		t.start();
-		spawnCount++;
+			Chicken chicken = (Chicken) locale.getWorld().spawnCreature(locale, CreatureType.CHICKEN);
+			chickens.add(new ZCchickens(chicken, this));
+			chickens.elementAt(spawnCount).chicken.setTarget(player);
+			//chickens[spawnCount]
+			Thread t=new Thread(chickens.elementAt(spawnCount));
+			t.start();
+			spawnCount++;
 		}
 		chickenAttacks=0;
 	}

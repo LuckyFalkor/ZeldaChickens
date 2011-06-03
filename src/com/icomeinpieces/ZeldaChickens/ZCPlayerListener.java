@@ -18,7 +18,7 @@ public class ZCPlayerListener extends PlayerListener
 		{
 			while(!ZCP.zcEntityListner.chickens.isEmpty())
 			{
-				ZCP.zcEntityListner.chickens.firstElement().remove();
+				ZCP.zcEntityListner.chickens.firstElement().chicken.remove();
 				ZCP.zcEntityListner.chickens.removeElementAt(0);
 			}
 		}
@@ -28,12 +28,25 @@ public class ZCPlayerListener extends PlayerListener
 	public void onPlayerRespawn(PlayerRespawnEvent event) 
 	{
 		ZCP.log.info("respawn triggered");
-		if(ZCP.zcEntityListner.chickens.capacity()>0)
+		if(ZCP.deathAfterDeath)
 		{
-			while(!ZCP.zcEntityListner.chickens.isEmpty())
+			if(ZCP.zcEntityListner.chickens.capacity()>0)
 			{
-				ZCP.zcEntityListner.chickens.firstElement().remove();
-				ZCP.zcEntityListner.chickens.removeElementAt(0);
+				while(!ZCP.zcEntityListner.chickens.isEmpty())
+				{
+					ZCP.zcEntityListner.chickens.firstElement().chicken.remove();
+					ZCP.zcEntityListner.chickens.removeElementAt(0);
+				}
+			}
+		}
+		else
+		{
+			ZCP.log.info("respawn, retarget triggered");
+			for (ZCchickens ZCchicken:ZCP.zcEntityListner.chickens)
+			{
+				//ZCP.log.info("chicken target: " + ZCchicken.chicken.g);
+				ZCchicken.player = event.getPlayer();
+				ZCchicken.chicken.setTarget(ZCchicken.player);
 			}
 		}
 	}

@@ -6,8 +6,9 @@ import org.bukkit.entity.Player;
 
 public class ZCchickens implements Runnable 
 {
-	Chicken chicken=null;
-	ZCEntityListener ZCE;
+	public Chicken chicken=null;
+	public ZCEntityListener ZCE;
+	public Player player;
 	boolean spawned = true;
 	public ZCchickens(Chicken chicken, ZCEntityListener instance) 
 	{
@@ -26,7 +27,7 @@ public class ZCchickens implements Runnable
 	@Override
 	public void run() 
 	{
-		Player player = (Player) chicken.getTarget();
+		player = (Player) chicken.getTarget();
 		while(!chicken.isDead())
 		{
 			Double xDistance = Math.abs(player.getLocation().getX() - chicken.getLocation().getX());
