@@ -1,5 +1,7 @@
 package com.icomeinpieces.ZeldaChickens;
 
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -14,41 +16,66 @@ public class ZCPlayerListener extends PlayerListener
 
 	public void onPlayerQuit(PlayerQuitEvent event)
 	{
-		if(ZCP.zcEntityListner.chickens.capacity()>0)
-		{
-			while(!ZCP.zcEntityListner.chickens.isEmpty())
-			{
-				ZCP.zcEntityListner.chickens.firstElement().chicken.remove();
-				ZCP.zcEntityListner.chickens.removeElementAt(0);
-			}
-		}
+	    if (event.getPlayer() instanceof Player)
+	    {
+	        Player player = event.getPlayer();
+    		if(ZCP.zcEntityListner.getZCplayer(player).chickens != null)
+    		{
+    			for (int x=0; x < ZCP.zcEntityListner.getZCplayer(player).chickens.length; x++)
+    			{
+    				if (ZCP.zcEntityListner.getZCplayer(player).chickens[x] != null)
+    				{
+    					ZCP.zcEntityListner.getZCplayer(player).chickens[x].chicken.remove();
+    				}
+    			}
+    		}
+    		//TODO: correct to use methods in ZCP
+    		ZCP.zcEntityListner.players.remove(ZCP.zcEntityListner.getZCplayer(event.getPlayer()));
+	    }
 	}
 
-	@Override
+    @Override
+    public void onPlayerJoin(PlayerJoinEvent event)
+    {
+        if (event.getPlayer() instanceof Player)
+        {
+            ZCP.zcEntityListner.players.add(new ZCplayer(ZCP.zcEntityListner, event.getPlayer()));
+        }
+    }
+
+    @Override
 	public void onPlayerRespawn(PlayerRespawnEvent event) 
 	{
-		ZCP.log.info("respawn triggered");
-		if(ZCP.deathAfterDeath)
-		{
-			if(ZCP.zcEntityListner.chickens.capacity()>0)
-			{
-				while(!ZCP.zcEntityListner.chickens.isEmpty())
-				{
-					ZCP.zcEntityListner.chickens.firstElement().chicken.remove();
-					ZCP.zcEntityListner.chickens.removeElementAt(0);
-				}
-			}
-		}
-		else
-		{
-			ZCP.log.info("respawn, retarget triggered");
-			for (ZCchickens ZCchicken:ZCP.zcEntityListner.chickens)
-			{
-				//ZCP.log.info("chicken target: " + ZCchicken.chicken.g);
-				ZCchicken.player = event.getPlayer();
-				ZCchicken.chicken.setTarget(ZCchicken.player);
-			}
-		}
+        if(event.getPlayer() instanceof Player)
+        {
+            Player player = event.getPlayer();
+    		if(ZCP.deathAfterDeath)
+    		{
+    			if(ZCP.zcEntityListner.getZCplayer(player).chickens != null)
+    			{
+    				for (int x=0; x < ZCP.zcEntityListner.getZCplayer(player).chickens.length; x++)
+    				{
+    					if (ZCP.zcEntityListner.getZCplayer(player).chickens[x] != null)
+    					{
+    						ZCP.zcEntityListner.getZCplayer(player).chickens[x].chicken.remove();
+    					}
+    				}
+    			}
+    		}
+    		else
+    		{
+    		    if(ZCP.zcEntityListner.getZCplayer(player).chickens != null)
+                {
+        			for (int x=0; x < ZCP.zcEntityListner.getZCplayer(player).chickens.length; x++)
+        			{
+        				if (ZCP.zcEntityListner.getZCplayer(player).chickens[x] != null)
+        				{
+        					ZCP.zcEntityListner.getZCplayer(player).chickens[x].player = event.getPlayer();
+        				}
+        			}
+    			}
+    		}
+        }
 	}
 	
 }

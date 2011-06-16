@@ -1,29 +1,56 @@
 package com.icomeinpieces.ZeldaChickens;
 
 import java.util.Vector;
+
 import org.bukkit.Location;
 import org.bukkit.entity.Chicken;
-import org.bukkit.entity.CreatureType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-//import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityListener;
 
 
 public class ZCEntityListener extends EntityListener
 {
 	public ZeldaChickens ZCP;
-	public Vector<ZCchickens> chickens = new Vector<ZCchickens>();
-	private int chickenAttacks=0;
+	public Vector<ZCplayer> players = new Vector<ZCplayer>();
+	public Location locale=null;
 	public ZCEntityListener(ZeldaChickens instance)
 	{
 	    ZCP = instance;
 	}
+	
+	@Override
+//    public void onItemSpawn(ItemSpawnEvent event)
+//    {
+//	    if(event.isCancelled())
+//	    {
+//	        return;
+//	    }
+//	    if(ZCP.swarmDrops)
+//	    {
+//            return;
+//	    }
+//	    else
+//	    {
+//	        if (locale != null && event.getEntity() instanceof Item)
+//	        {
+//	            Location itemLocale = event.getLocation();
+//                Item item = (Item) event.getEntity();
+//	            if (item.getItemStack().getType() == Material.FEATHER && locationMatch(locale, itemLocale))
+//	            {
+//	                event.setCancelled(true);
+//	            }
+//	        }
+//	    }
+//    }
 
-	public void onEntityDamage(EntityDamageEvent event)
+
+
+    public void onEntityDamage(EntityDamageEvent event)
 	{
-		if(!event.isCancelled())
+	    ZCplayer zcPlayer = null;
+		if(!event.isCancelled() && ZCP.state)
 		{
 				EntityDamageByEntityEvent EDBEevent = null;
 				Player player = null;
@@ -31,46 +58,71 @@ public class ZCEntityListener extends EntityListener
 				if (event instanceof EntityDamageByEntityEvent)
 				{
 					EDBEevent = (EntityDamageByEntityEvent) event;
-				}
-				if (EDBEevent != null)
-				{
-					if (EDBEevent.getDamager() instanceof Player)
+					if (EDBEevent.getDamager() instanceof Player && EDBEevent.getEntity() instanceof Chicken)
 					{
 						player = (Player) EDBEevent.getDamager();
+						zcPlayer = getZCplayer(player);
+						if (zcPlayer == null)
+						{
+						    passedChecks=false;
+						    ZCP.log.info(ZCP.pluginName + "issue retrieving player from somewhere, please advise author");
+						}
 					}
 					else
 					{
 						passedChecks=false;
 					}
-					if(!(EDBEevent.getEntity() instanceof Chicken)) passedChecks=false;
 				}
 				else
 				{
 					passedChecks=false;
 				}
-				if(passedChecks && (ZCP).permissionHandler.has(player, "zc.chickenswarm"))
+				if (passedChecks)
 				{
-					if (chickens.isEmpty()) chickenAttacks++;
-					if (chickenAttacks >= ZCP.chickenAttacksTrigger) summonChickens(player);
+					if (ZCP.permissionsEnabaled)
+					{
+						if((ZCP).permissionHandler.has(player, "zc.chickenswarm"))
+						{
+							if (zcPlayer.chickens == null) zcPlayer.chickenAttacks++;
+							if (zcPlayer.chickenAttacks >= ZCP.chickenAttacksTrigger) summonChickensOnPlayer(zcPlayer);
+						}
+					}
+					else
+					{
+						if (zcPlayer.chickens == null) zcPlayer.chickenAttacks++;
+						if (zcPlayer.chickenAttacks >= ZCP.chickenAttacksTrigger) summonChickensOnPlayer(zcPlayer);
+					}
 				}
 		}
 	}
 	
-	private void summonChickens(Player player)
+	public ZCplayer getZCplayer(Player player)
+    {
+	    ZCplayer zcPlayer = null;
+	    for (ZCplayer zcPlayerTemp : players)
+	    {
+	        if (zcPlayerTemp.player.getDisplayName() == player.getDisplayName())
+	        {
+	            zcPlayer = zcPlayerTemp;
+	            break;
+	        }
+	    }
+	    return zcPlayer;
+    }
+
+    public void summonChickensOnPlayer(ZCplayer zcPlayer)
 	{
-		Location locale = player.getLocation();
-		locale.setY(locale.getY()+ZCP.spawnHeight);
-		int spawnCount = 0;
-		while (spawnCount < ZCP.mobSize)
-		{
-			Chicken chicken = (Chicken) locale.getWorld().spawnCreature(locale, CreatureType.CHICKEN);
-			chickens.add(new ZCchickens(chicken, this));
-			chickens.elementAt(spawnCount).chicken.setTarget(player);
-			//chickens[spawnCount]
-			Thread t=new Thread(chickens.elementAt(spawnCount));
-			t.start();
-			spawnCount++;
-		}
-		chickenAttacks=0;
+        zcPlayer.summonChickens();
 	}
+//    private boolean locationMatch(Location chicken2check, Location item2Check)
+//    {
+//        double x = Math.abs(chicken2check.getX() - item2Check.getX());
+//        double y = Math.abs(chicken2check.getY() - item2Check.getY());
+//        double z = Math.abs(chicken2check.getZ() - item2Check.getZ());
+//        if (x<=1 && y<=1 && z<=1)
+//        {
+//            return true;
+//        }
+//        return false;
+//    }
 }

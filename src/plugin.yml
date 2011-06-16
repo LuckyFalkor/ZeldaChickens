@@ -1,5 +1,23 @@
 name: ZeldaChickens
 main: com.icomeinpieces.ZeldaChickens.ZeldaChickens
-version: 1.0
+version: 1.05
 description: Makes chickens behave like the chickens on Zelda games. Kill one and a bunch come from the skies to attack you.
 author: icomeinpieces
+commands:
+    zcreload:
+        description: reloads the configuration file.
+        usage: /<command>
+    zcswarmplayer:
+        description: summons a swarm onto an unsuspecting player.
+        usage: /<command>
+    zcswarmthyself:
+        description: summons a swarm onto the player issuing the command.
+        usage: /<command>
+    zcstate:
+        description: toggles wither or not chicken spawning occurs or not. can set with options on or off
+        usage: /<command>
+    zchelp:
+        desciption: displays info on commands that a player is allowed to use
+    zeldachickens:
+        description: gets information on zeldachicken commands
+        usage: /<command>
