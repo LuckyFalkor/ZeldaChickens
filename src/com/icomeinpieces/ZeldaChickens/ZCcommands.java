@@ -2,6 +2,7 @@ package com.icomeinpieces.ZeldaChickens;
 
 import java.util.List;
 
+import org.bukkit.World;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
@@ -16,7 +17,7 @@ public class ZCcommands
     {
         if (commandLabel.equalsIgnoreCase("zcreload"))
         {
-            console.sendMessage(ZCP.pluginName + "configuration reloaded");
+            ZeldaChickens.sendMessage("configuration reloaded", console);
             ZCP.Reload();
             return;
         }
@@ -24,18 +25,18 @@ public class ZCcommands
         {
             if (args==null || args.length < 1)
             {
-                console.sendMessage(ZCP.pluginName + "you did not provide a player name");
+                ZeldaChickens.sendMessage("you did not provide a player name", console);
                 return;
             }
             if (args.length > 1)
             {
-                console.sendMessage(ZCP.pluginName + "You only need one argument (playername) for this command");
-                console.sendMessage(ZCP.pluginName + "Swarming mutiple people will come in a later version");
+                ZeldaChickens.sendMessage("You only need one argument (playername) for this command", console);
+                ZeldaChickens.sendMessage("Swarming mutiple people will come in a later version", console);
                 return;
             }
             if (args[0].equalsIgnoreCase("*"))
             {
-                console.sendMessage(ZCP.pluginName + "Swarming mutiple people will come in a later version");
+                ZeldaChickens.sendMessage("Swarming mutiple people will come in a later version", console);
                 return;
             }
             List<Player> players = console.getServer().matchPlayer(args[0]);
@@ -44,91 +45,132 @@ public class ZCcommands
                 Player player2 = players.get(0);
                 if (ZCP.zcEntityListner.getZCplayer(player2).chickens==null)
                 {
-                    console.sendMessage(ZCP.pluginName + "You have sent a Chicken Swarm after " + player2.getDisplayName() + ".");
-                    player2.sendMessage(ZCP.pluginName + "a system admin has sent a Chicken Swarm after you , defend yourself.");
+                    ZeldaChickens.sendMessage("You have sent a Chicken Swarm after " + player2.getDisplayName() + ".", console);
+                    ZeldaChickens.sendMessage("a system admin has sent a Chicken Swarm after you , defend yourself.", player2);
                     ZCP.zcEntityListner.summonChickensOnPlayer(ZCP.zcEntityListner.getZCplayer(player2));
                 }
                 else
                 {
-                    console.sendMessage(ZCP.pluginName + player2.getDisplayName() + " is currently fighting a swarm, please wait a moment.");
+                    ZeldaChickens.sendMessage(player2.getDisplayName() + " is currently fighting a swarm, please wait a moment.", console);
                 }
             }
             else if (players.size()>1)
             {
-                console.sendMessage(ZCP.pluginName + "Sorry there is more then 1 player matching the given argument");
+                ZeldaChickens.sendMessage("Sorry there is more then 1 player matching the given argument", console);
             }
-            else if (players.size()<1)
+            else if (players.size()==0)
             {
-                console.sendMessage(ZCP.pluginName + "Sorry there was no players matching the given argument");
+                ZeldaChickens.sendMessage("Sorry there was no players matching the given argument", console);
             }
             else
             {
-                console.sendMessage(ZCP.pluginName + "There was some sort of an error in finding players, please advise author");
+                ZeldaChickens.sendMessage( "There was some sort of an error in finding players, please advise author", console);
             }
             return;
         }
         if (commandLabel.equalsIgnoreCase("zcswarmthyself"))
         {
-            console.sendMessage(ZCP.pluginName + "your the console, you can't swarm yourself");
+            ZeldaChickens.sendMessage("your the console, you can't swarm yourself", console);
             return;
         }
-        if (commandLabel.equalsIgnoreCase("zc"))
+        if (commandLabel.equalsIgnoreCase("zcstate"))//TODO fix to accommodate multi word server names
         {
-            if (args==null || args.length < 1)
+            if (args==null || args.length < 1 || !(args[0].equalsIgnoreCase("on")||args[0].equalsIgnoreCase("off")))
             {
-                if (ZCP.state)
+                ZeldaChickens.sendMessage("Syntax is zc [on:off] to effect all worlds", console);
+                ZeldaChickens.sendMessage("You can also use zc [on:off] [worldName] to effect a single world", console);
+                return;
+            }
+            if (args.length == 1)
+            {
+                List<World> worlds = ZCP.getWorlds();
+                String state = args[0];
+                if (state.equalsIgnoreCase("on"))
                 {
-                    ZCP.state = false;
-                    console.sendMessage(ZCP.pluginName + "swarms turned off");
+                    for(World world: worlds) 
+                    {
+                        ZeldaChickens.config.setProperty(world.getName() + ".enabled", true);
+                    }
+                    ZeldaChickens.config.save();
+                    ZeldaChickens.sendMessage("swarms turned on for all worlds.", console);
+                }
+                else if (state.equalsIgnoreCase("off"))
+                {
+                    for(World world: worlds) 
+                    {
+                        ZeldaChickens.config.setProperty(world.getName() + ".enabled", false);
+                    }
+                    ZeldaChickens.config.save();
+                    ZeldaChickens.sendMessage("swarms turned off for all worlds.", console);
                 }
                 else
                 {
-                    ZCP.state = true;
-                    console.sendMessage(ZCP.pluginName + "swarms turned on");
+                    ZeldaChickens.sendMessage("If providing one argument, syntax is zcstate [on:off] to effect all worlds", console);
                 }
                 return;
             }
-            if (args.length > 1)
+            if (args.length >= 2)
             {
-                console.sendMessage(ZCP.pluginName + "You only need one argument [on:off] for this command");
+                List<World> worlds = ZCP.getWorlds();
+                World worldName=null;
+                String state = args[0];
+                String worldStringName = args[1];
+                for(int x = 2; x < args.length; x++)
+                {
+                    worldStringName = worldStringName + " " + args[x];
+                }
+                for(World world: worlds) 
+                {
+                    if (worldStringName.equals(world.getName())) worldName = world;
+                }
+                if (worldName==null)
+                {
+                    console.sendMessage("Available worlds (caps Sensitive):");
+                    for (World world:worlds)
+                    {
+                        console.sendMessage(world.getName());
+                    }
+                    return;
+                }
+                if (state.equalsIgnoreCase("on"))
+                {
+                    ZeldaChickens.config.setProperty(worldName.getName() + ".enabled", true);
+                    ZeldaChickens.sendMessage("swarms turned on for " + worldName.getName() + ".", console);
+                }
+                if (state.equalsIgnoreCase("off"))
+                {
+                    ZeldaChickens.config.setProperty(worldName.getName() + ".enabled", false);
+                    ZeldaChickens.sendMessage("swarms turned off for " + worldName.getName() + ".", console);
+                }
+                ZeldaChickens.config.save();
                 return;
             }
-            String state = args[0];
-            if (state.equalsIgnoreCase("on"))
-            {
-                ZCP.state = true;
-                console.sendMessage(ZCP.pluginName + "swarms turned on");
-                return;
-            }
-            if (state.equalsIgnoreCase("off"))
-            {
-                ZCP.state = false;
-                console.sendMessage(ZCP.pluginName + "swarms turned off");
-                return;
-            }
-            console.sendMessage(ZCP.pluginName + "Please specify state, zc [on:off]");
         }
         if (commandLabel.equalsIgnoreCase("zeldachickens"))
         {
-            console.sendMessage("plugin details for "+ ZCP.pluginName);
-            if (ZCP.state)
+            console.sendMessage("plugin details for "+ ZeldaChickens.pluginName);
+            List<World> worlds = ZCP.getWorlds();
+            for(World world: worlds) 
             {
-                console.sendMessage("plugin functionality is enabled");
-            }
-            else
-            {
-                console.sendMessage("plugin functionality is disabled");
+                if (ZeldaChickens.config.getBoolean(world.getName(), true))
+                {
+                    console.sendMessage("plugin functionality is enabled for " + world.getName());
+                }
+                else
+                {
+                    console.sendMessage("plugin functionality is disabled for " + world.getName());
+                }
             }
             console.sendMessage("This plugin is designed to allow chickens to fight back like they do in the Zelda games.");
-            console.sendMessage("for more info type zchelp on commands you are allowed to use");
+            console.sendMessage("for more info type zchelp for commands you are able to use");
         }
         if (commandLabel.equalsIgnoreCase("zchelp"))
         {
-            console.sendMessage(ZCP.pluginName + "The current commands that you are allowed to use:");
+            console.sendMessage(ZeldaChickens.pluginName + "The current commands that you are allowed to use:");
             console.sendMessage("zeldachicken - brief info to plugin");
             console.sendMessage("zchelp - command help");
-            console.sendMessage("zcstate - allows the user to toggle the plugin on or off");
-            console.sendMessage("zcstate on/off specifically sets this plugin's state");
+            console.sendMessage("zcstate [on:off] specifically sets this plugin's state, for all worlds");
+            console.sendMessage("zcstate [on:off] [worldName] specifically sets this plugin's state, for [worldName]");
             console.sendMessage("zcswarmthyself - summons a swarm on you");
             console.sendMessage("zcswarmplayer [player] - summons swarm on target player");
         }
@@ -143,13 +185,11 @@ public class ZCcommands
                     && ZCP.permissionHandler.has(player, "zc.admin.reload")))
             {
                 ZCP.Reload();
-                player.sendMessage(ZCP.pluginName + "configuration reloaded");
+                ZeldaChickens.sendMessage("configuration reloaded", player);
             }
             else
             {
-                player
-                        .sendMessage(ZCP.pluginName
-                                + "you are not allowed to use the zcreload command");
+                ZeldaChickens.sendMessage("you are not allowed to use the zcreload command", player);
             }
             return;
         }
@@ -160,19 +200,19 @@ public class ZCcommands
             {
                 if (args==null || args.length < 1)
                 {
-                    player.sendMessage(ZCP.pluginName + "you did not provide a player name");
-                    player.sendMessage(ZCP.pluginName + "To swarm yourself use the command /zcswarmthyself");
+                    ZeldaChickens.sendMessage("you did not provide a player name", player);
+                    ZeldaChickens.sendMessage("To swarm yourself use the command /zcswarmthyself", player);
                     return;
                 }
                 if (args.length > 1)
                 {
-                    player.sendMessage(ZCP.pluginName + "You only need one argument (playername) for this command");
-                    player.sendMessage(ZCP.pluginName + "Swarming mutiple people will come in a later version");
+                    ZeldaChickens.sendMessage("You only need one argument (playername) for this command", player);
+                    ZeldaChickens.sendMessage("Swarming mutiple people will come in a later version", player);
                     return;
                 }
                 if (args[0].equalsIgnoreCase("*"))
                 {
-                    player.sendMessage(ZCP.pluginName + "Swarming mutiple people will come in a later version");
+                    ZeldaChickens.sendMessage("Swarming mutiple people will come in a later version", player);
                     return;
                 }
                 List<Player> players = player.getServer().matchPlayer(args[0]);
@@ -181,33 +221,31 @@ public class ZCcommands
                     Player player2 = players.get(0);
                     if (ZCP.zcEntityListner.getZCplayer(player2).chickens==null)
                     {
-                        player.sendMessage(ZCP.pluginName + "You have sent a Chicken Swarm after " + player2.getDisplayName() + ".");
-                        player2.sendMessage(ZCP.pluginName + player.getDisplayName() + " has sent a Chicken Swarm after you , defend yourself.");
+                        ZeldaChickens.sendMessage("You have sent a Chicken Swarm after " + player2.getDisplayName() + ".", player);
+                        ZeldaChickens.sendMessage(" has sent a Chicken Swarm after you , defend yourself.", player2);
                         ZCP.zcEntityListner.summonChickensOnPlayer(ZCP.zcEntityListner.getZCplayer(player2));
                     }
                     else
                     {
-                        player.sendMessage(ZCP.pluginName + player2.getDisplayName() + " is currently fighting a swarm, please wait a moment.");
+                        ZeldaChickens.sendMessage(player2.getDisplayName() + " is currently fighting a swarm, please wait a moment.", player);
                     }
                 }
                 else if (players.size()>1)
                 {
-                    player.sendMessage(ZCP.pluginName + "Sorry there is more then 1 player matching the given argument");
+                    ZeldaChickens.sendMessage("Sorry there is more then 1 player matching the given argument", player);
                 }
                 else if (players.size()<1)
                 {
-                    player.sendMessage(ZCP.pluginName + "Sorry there was no players matching the given argument");
+                    ZeldaChickens.sendMessage("Sorry there was no players matching the given argument", player);
                 }
                 else
                 {
-                    player.sendMessage(ZCP.pluginName + "There was some sort of an error in finding players, please advise author");
+                    ZeldaChickens.sendMessage("There was some sort of an error in finding players, please advise author", player);
                 }
             }
             else
             {
-                player
-                        .sendMessage(ZCP.pluginName
-                                + "you are not allowed to use the zcswarmplayer command");
+                ZeldaChickens.sendMessage("you are not allowed to use the zcswarmplayer command", player);
             }
             return;
         }
@@ -219,95 +257,134 @@ public class ZCcommands
                 {
                     if (ZCP.zcEntityListner.getZCplayer(player).chickens==null)
                     {
-                        player.sendMessage(ZCP.pluginName + "You have summoned a Chicken Swarm on yourself");
+                        ZeldaChickens.sendMessage("You have summoned a Chicken Swarm on yourself", player);
                         ZCP.zcEntityListner.summonChickensOnPlayer(ZCP.zcEntityListner.getZCplayer(player));
                     }
                     else
                     {
-                        player.sendMessage(ZCP.pluginName + player.getDisplayName() + " are you crazy, finish your current fight :).");
+                        ZeldaChickens.sendMessage(player.getDisplayName() + " are you crazy, finish your current fight :).", player);
                     }
                 }
                 else
                 {
-                    player.sendMessage(ZCP.pluginName + "You do not need any arguements for this command");
+                    ZeldaChickens.sendMessage("You do not need any arguements for this command", player);
                 }
             }
             else
             {
-                player.sendMessage(ZCP.pluginName
-                                + "you are not allowed to use the zcswarmthyself command");
+                ZeldaChickens.sendMessage("you are not allowed to use the zcswarmthyself command", player);
             } 
             return;
         }
-        if (commandLabel.equalsIgnoreCase("zcstate"))
+        if (commandLabel.equalsIgnoreCase("zcstate")) //TODO fix to accommodate multi word server names
         {
             if (player.isOp() || (ZCP.permissionsEnabaled && ZCP.permissionHandler.has(player, "zc.admin.zcstate")))
             {
-                if (args==null || args.length < 1)
+                if (args==null || args.length < 1 || !(args[0].equalsIgnoreCase("on")||args[0].equalsIgnoreCase("off")))
                 {
-                    if (ZCP.state)
+                    ZeldaChickens.sendMessage("Syntax is zc [on:off] to effect all worlds", player);
+                    ZeldaChickens.sendMessage("You can also use zc [on:off] [worldName] to effect a single world", player);
+                    return;
+                }
+                if (args.length == 1)
+                {
+                    List<World> worlds = ZCP.getWorlds();
+                    String state = args[0];
+                    if (state.equalsIgnoreCase("on"))
                     {
-                        ZCP.state = false;
-                        player.sendMessage(ZCP.pluginName + "swarms turned off");
+                        for(World world: worlds) 
+                        {
+                            ZeldaChickens.config.setProperty(world.getName() + ".enabled", true);
+                        }
+                        ZeldaChickens.config.save();
+                        ZeldaChickens.sendMessage("swarms turned on for all worlds.", player);
+                    }
+                    else if (state.equalsIgnoreCase("off"))
+                    {
+                        for(World world: worlds) 
+                        {
+                            ZeldaChickens.config.setProperty(world.getName() + ".enabled", false);
+                        }
+                        ZeldaChickens.config.save();
+                        ZeldaChickens.sendMessage("swarms turned off for all worlds.", player);
                     }
                     else
                     {
-                        ZCP.state = true;
-                        player.sendMessage(ZCP.pluginName + "swarms turned on");
+                        ZeldaChickens.sendMessage("If providing one argument, syntax is zcstate [on:off] to effect all worlds", player);
                     }
                     return;
                 }
-                if (args.length > 1)
+                if (args.length >= 2)
                 {
-                    player.sendMessage(ZCP.pluginName + "You only need one argument [on:off] for this command");
+                    List<World> worlds = ZCP.getWorlds();
+                    World worldName=null;
+                    String state = args[0];
+                    String worldStringName = args[1];
+                    for(int x = 2; x < args.length; x++)
+                    {
+                        worldStringName = worldStringName + " " + args[x];
+                    }
+                    for(World world: worlds) 
+                    {
+                        if (worldStringName.equals(world.getName())) worldName = world;
+                    }
+                    if (worldName==null)
+                    {
+                        player.sendMessage("Available worlds (caps Sensitive):");
+                        for (World world:worlds)
+                        {
+                            player.sendMessage(world.getName());
+                        }
+                        return;
+                    }
+                    if (state.equalsIgnoreCase("on"))
+                    {
+                        ZeldaChickens.config.setProperty(worldName.getName() + ".enabled", true);
+                        ZeldaChickens.sendMessage("swarms turned on for " + worldName.getName() + ".", player);
+                    }
+                    if (state.equalsIgnoreCase("off"))
+                    {
+                        ZeldaChickens.config.setProperty(worldName.getName() + ".enabled", false);
+                        ZeldaChickens.sendMessage("swarms turned off for " + worldName.getName() + ".", player);
+                    }
+                    ZeldaChickens.config.save();
                     return;
                 }
-                String state = args[0];
-                if (state.equalsIgnoreCase("on"))
-                {
-                    ZCP.state = true;
-                    player.sendMessage(ZCP.pluginName + "swarms turned on");
-                    return;
-                }
-                if (state.equalsIgnoreCase("off"))
-                {
-                    ZCP.state = false;
-                    player.sendMessage(ZCP.pluginName + "swarms turned off");
-                    return;
-                }
-                player.sendMessage(ZCP.pluginName + "Please specify state, zc [on:off]");
             }
             else
             {
-                player.sendMessage(ZCP.pluginName
-                                + "you are not allowed to use the zc command");
+                ZeldaChickens.sendMessage("you are not allowed to use the zc command", player);
             } 
         }
         if (commandLabel.equalsIgnoreCase("zeldachickens"))
         {
-            player.sendMessage("plugin details for "+ ZCP.pluginName);
-            if (ZCP.state)
+            player.sendMessage("plugin details for "+ ZeldaChickens.pluginName);
+            List<World> worlds = ZCP.getWorlds();
+            for(World world: worlds) 
             {
-                player.sendMessage("plugin functionality is enabled");
-            }
-            else
-            {
-                player.sendMessage("plugin functionality is disabled");
+                if (ZeldaChickens.config.getBoolean(world.getName(), true))
+                {
+                    player.sendMessage("plugin functionality is enabled for " + world.getName());
+                }
+                else
+                {
+                    player.sendMessage("plugin functionality is disabled for " + world.getName());
+                }
             }
             player.sendMessage("This plugin is designed to allow chickens to fight back like they do in the Zelda games.");
-            player.sendMessage("for more info type zchelp on commands you are allowed to use");
+            player.sendMessage("for more info type zchelp for commands you are allowed to use");
         }
         if (commandLabel.equalsIgnoreCase("zchelp"))
         {
-            player.sendMessage(ZCP.pluginName + "The current commands that you are allowed to use:");
+            ZeldaChickens.sendMessage("The current commands that you are allowed to use:", player);
             player.sendMessage("zeldachicken - brief info to plugin");
             player.sendMessage("zchelp - command help");
             if (ZCP.permissionsEnabaled)
             {
                 if(ZCP.permissionHandler.has(player, "zc.admin.zcstate"))
                 {
-                    player.sendMessage("zcstate - allows the user to toggle the plugin on or off");
-                    player.sendMessage("zcstate on/off specifically sets this plugin's state");
+                    player.sendMessage("zcstate [on:off] specifically sets this plugin's state, for all worlds");
+                    player.sendMessage("zcstate [on:off] [worldName] specifically sets this plugin's state, for [worldName]");
                 }
                 if(ZCP.permissionHandler.has(player, "zc.admin.swarmthyself"))
                 {
@@ -327,8 +404,8 @@ public class ZCcommands
             {
                 if(player.isOp())
                 {
-                    player.sendMessage("zcstate - allows the user to toggle the plugin on or off");
-                    player.sendMessage("zcstate on/off specifically sets this plugin's state");
+                    player.sendMessage("zcstate [on:off] specifically sets this plugin's state, for all worlds");
+                    player.sendMessage("zcstate [on:off] [worldName] specifically sets this plugin's state, for [worldName]");
                     player.sendMessage("zcswarmthyself - summons a swarm on you");
                     player.sendMessage("zcswarmplayer [player] - summons swarm on target player");
                     player.sendMessage("zcreload - reloads the config file");

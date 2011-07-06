@@ -2,11 +2,11 @@ package com.icomeinpieces.ZeldaChickens;
 
 public class ZCchickenDeathWatcher implements Runnable 
 {
-	public ZCplayer ZCPs;
+	public ZCplayer ZCPlayer;
 	private boolean isempty = false;
 	public ZCchickenDeathWatcher(ZCplayer instance)
 	{
-		this.ZCPs = instance;
+		this.ZCPlayer = instance;
 	}
 	
 	public void run() 
@@ -14,14 +14,14 @@ public class ZCchickenDeathWatcher implements Runnable
 		while (!isempty)
 		{
 			isempty = true;
-			for (int x=0; x < ZCPs.chickens.length; x++)
+			for (int x=0; x < ZCPlayer.chickens.length; x++)
 			{
-				if (ZCPs.chickens[x] != null)
+				if (ZCPlayer.chickens[x] != null)
 				{
 					isempty = false;
-					if (ZCPs.chickens[x].chicken.isDead())
+					if (ZCPlayer.chickens[x].chicken.isDead())
 					{
-                        ZCPs.chickens[x]=null;
+                        ZCPlayer.chickens[x]=null;
 					}
 				}
 			}
@@ -32,7 +32,8 @@ public class ZCchickenDeathWatcher implements Runnable
 
 			}
 		}
-		ZCPs.chickens=null;
+		ZCPlayer.chickens=null;
+		ZeldaChickens.sendMessage(ZeldaChickens.config.getString("Global.victoryMessage"), ZCPlayer.player);
 	}
 
 }

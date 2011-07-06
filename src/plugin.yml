@@ -1,6 +1,6 @@
 name: ZeldaChickens
 main: com.icomeinpieces.ZeldaChickens.ZeldaChickens
-version: 1.05
+version: 2.02
 description: Makes chickens behave like the chickens on Zelda games. Kill one and a bunch come from the skies to attack you.
 author: icomeinpieces
 commands:

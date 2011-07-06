@@ -29,7 +29,6 @@ public class ZCPlayerListener extends PlayerListener
     				}
     			}
     		}
-    		//TODO: correct to use methods in ZCP
     		ZCP.zcEntityListner.players.remove(ZCP.zcEntityListner.getZCplayer(event.getPlayer()));
 	    }
 	}
@@ -49,7 +48,7 @@ public class ZCPlayerListener extends PlayerListener
         if(event.getPlayer() instanceof Player)
         {
             Player player = event.getPlayer();
-    		if(ZCP.deathAfterDeath)
+    		if(ZeldaChickens.config.getBoolean(player.getWorld().getName()+".poofAfterDeath", ZeldaChickens.deathAfterDeath))
     		{
     			if(ZCP.zcEntityListner.getZCplayer(player).chickens != null)
     			{
