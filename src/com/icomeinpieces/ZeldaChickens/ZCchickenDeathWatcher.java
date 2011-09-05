@@ -33,6 +33,7 @@ public class ZCchickenDeathWatcher implements Runnable
 			}
 		}
 		ZCPlayer.chickens=null;
+		System.gc();
 		ZeldaChickens.sendMessage(ZeldaChickens.config.getString("Global.victoryMessage"), ZCPlayer.player);
 	}
 

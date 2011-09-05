@@ -1,6 +1,8 @@
 
 package com.icomeinpieces.ZeldaChickens;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -31,10 +33,10 @@ import com.nijikokun.bukkit.Permissions.Permissions;
  * added enabled option for turning the plugin on or off for each world
  * added swarmFeatherDrops option to prevent farming of chicken swarms(normal chickens still drop feathers)
  * added multi world support for all settings
- * added customisable messages for the following situations: 
+ * added customisable messages for the following situations (use false to disable the message): 
  *  globalAnnouncement for displaying when a swarm is summoned, supports the :player: variable
- *  playerWarning for the player whom a chickenswarm is summoned after
- *  victoryMessage for the player who has defeated the chicken swarm
+ *  playerWarning for the player whom a chickenswarm is summoned after (no variable support at this time)
+ *  victoryMessage for the player who has defeated the chicken swarm (no variable support at this time)
  * added option to enable or disable the plugin name prefix to messages from ZeldaChickens
  * fixed a bug that prevented chickens from crossing worlds (like when using a portal). <-- experimental
  * 2.01 <--fix for null pointer exception when poofafterdeath option is set to true
@@ -119,13 +121,55 @@ public class ZeldaChickens extends JavaPlugin
 
     public void Reload()
     {
+        List<World> worlds = getServer().getWorlds();
+        File configFile = new File(getDataFolder() + "\\config.yml");
+        if (configFile.canRead())
+        {
+            log.info("config file found at: "+configFile.getPath());
+        }
+        else
+        {
+            log.info(configFile.getPath() + " config file not found, creating file now");
+            try
+            {
+                configFile.createNewFile();
+            }
+            catch (IOException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            config = new Configuration(configFile);
+            config.setHeader("#Settings file for "+pluginName);
+            for(World world: worlds) 
+            {
+                //TODO for each world output a config setting and write to file as you go
+                config.setProperty(world.getName() + ".enabled", state);
+                config.setProperty(world.getName() + ".poofAfterDeath", deathAfterDeath);
+                config.setProperty(world.getName() + ".catchUpEnabled", catchUp);
+                config.setProperty(world.getName() + ".swarmFeatherDrops", swarmDrops);
+                config.setProperty(world.getName() + ".chickenMobSize", mobSize);
+                config.setProperty(world.getName() + ".chickenDamage", mobDamage);
+                config.setProperty(world.getName() + ".chickenHitsTrigger", chickenAttacksTrigger);
+                config.setProperty(world.getName() + ".chickenHealth", chickHealth);
+                config.setProperty(world.getName() + ".chickenAttackRange", damageDistance);
+                config.setProperty(world.getName() + ".chickenSpawnHeight", spawnHeight);
+                config.setProperty(world.getName() + ".maxOutRunDistance", maxDistance);
+            }//TODO: finish up manual settings
+            config.save();
+            config.getBoolean("Global.displayPluginName", true);
+            config.getString("Global.globalAnnouncement", publicMessage);
+            config.getString("Global.playerWarning", privateMessage);
+            config.getString("Global.victoryMessage", winningMessage);
+            config.save();
+            
+        }
         config = getConfiguration();
         config.load();
-        if ((config.getHeader()==null)||(!config.getHeader().equals("#Settings file for "+pluginName)))
-        {
-            config.setHeader("#Settings file for "+pluginName);
-        }
-        List<World> worlds = getServer().getWorlds();
+//        if ((config.getHeader()==null)||(!config.getHeader().equals("#Settings file for "+pluginName)))
+//        {
+//            config.setHeader("#Settings file for "+pluginName);
+//        }        
         for(World world: worlds) 
         {
             int temp1;
@@ -153,7 +197,6 @@ public class ZeldaChickens extends JavaPlugin
         config.getString("Global.globalAnnouncement", publicMessage);
         config.getString("Global.playerWarning", privateMessage);
         config.getString("Global.victoryMessage", winningMessage);
-        config.save();
     }
 
     @Override

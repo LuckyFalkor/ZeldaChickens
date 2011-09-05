@@ -19,6 +19,7 @@ public class ZCplayer
 
     public void summonChickens()
     {
+        System.gc();
         Player[] playerList = player.getServer().getOnlinePlayers();
         Player victim=null;
         for (Player playerInList : playerList)
@@ -54,5 +55,6 @@ public class ZCplayer
         {
             zcChickens.chicken.remove();            
         }
+        System.gc();
     }
 }
