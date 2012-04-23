@@ -1,1 +1,1 @@
-ZeldaChickens - a plugin to emulate the angry chickens on Zelda games
+ZeldaChickens - a plugin to emulate the angry chickens on Zelda games <-- commands temporaily removed till permissions can be updated
