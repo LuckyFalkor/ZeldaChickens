@@ -2,23 +2,24 @@
 package com.icomeinpieces.ZeldaChickens;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.bukkit.World;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.config.Configuration;
 
-import com.nijiko.permissions.PermissionHandler;
-import com.nijikokun.bukkit.Permissions.Permissions;
+//import org.bukkit.command.Command;
+//import org.bukkit.command.ConsoleCommandSender;
+//import org.bukkit.event.Event;
+//import org.bukkit.plugin.Plugin;
+//import org.bukkit.util.config.Configuration;
 //TODO make commands multi-world aware. (almost done needs zcstate tweaking)<-- finished? requires testing.
 
 /*TODO future things to work on
@@ -34,7 +35,7 @@ import com.nijikokun.bukkit.Permissions.Permissions;
  * added swarmFeatherDrops option to prevent farming of chicken swarms(normal chickens still drop feathers)
  * added multi world support for all settings
  * added customisable messages for the following situations (use false to disable the message): 
- *  globalAnnouncement for displaying when a swarm is summoned, supports the :player: variable
+ *  globalAnnouncement for displaying when a swarm is summoned, supports the PLAYER variable
  *  playerWarning for the player whom a chickenswarm is summoned after (no variable support at this time)
  *  victoryMessage for the player who has defeated the chicken swarm (no variable support at this time)
  * added option to enable or disable the plugin name prefix to messages from ZeldaChickens
@@ -68,13 +69,13 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 
 public class ZeldaChickens extends JavaPlugin
 {
-    protected final Logger log = Logger.getLogger("Minecraft");
-    protected final ZCEntityListener zcEntityListner = new ZCEntityListener(this);
-    protected final ZCPlayerListener zcPlayerListener = new ZCPlayerListener(this);
-    protected final ZCcommands zcCommands = new ZCcommands(this);
+    protected Logger log;
+    protected ZCEntityListener zcEntityListner;
+    protected ZCPlayerListener zcPlayerListener;
+    //protected final ZCcommands zcCommands = new ZCcommands(this);
 
     protected static final String pluginName = "ZeldaChicken V. 2.02: ";
-    protected static final String publicMessage = ":player: has incurred the wrath of the chicken goddess!";
+    protected static final String publicMessage = "PLAYER has incurred the wrath of the chicken goddess!";
     protected static final String privateMessage = "Warning incoming swarm!";
     protected static final String winningMessage = "The chicken swarm is dead, your safe for now.";
     protected static final Integer mobSize = 10;
@@ -90,38 +91,35 @@ public class ZeldaChickens extends JavaPlugin
     protected static final Boolean swarmDrops = false;
     
 //    private  static final String filePath = "/ZeldaChickens.cfg";
-    protected PermissionHandler permissionHandler;
     protected PluginManager pm;
     protected Boolean permissionsEnabaled = false;
-    protected static Configuration config;
-
+    protected static FileConfiguration config;
+    private String filePath = "\\config.yml";
+    
     public void onDisable()
     {
-        config.save();
         log.info(pluginName + "disabled");
     }
-
+    
     public void onEnable()
-    {
+    {   
+        //make assignments
+        log = Logger.getLogger("Minecraft");
+        zcEntityListner = new ZCEntityListener(this);
+        zcPlayerListener = new ZCPlayerListener(this);
+        
         log.info(pluginName + "starting");
         pm = getServer().getPluginManager();
-        pm.registerEvent(Event.Type.ENTITY_DAMAGE, this.zcEntityListner,
-                Event.Priority.Normal, this);
-         pm.registerEvent(Event.Type.ENTITY_DEATH, this.zcEntityListner,
-         Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.PLAYER_JOIN, this.zcPlayerListener, Event.Priority.Lowest, this);
-        pm.registerEvent(Event.Type.PLAYER_RESPAWN, this.zcPlayerListener,
-                Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.PLAYER_QUIT, this.zcPlayerListener,
-                Event.Priority.Lowest, this);
-        permissionsEnabaled = setupPermissions();
+        pm.registerEvents(zcEntityListner, this);
+        pm.registerEvents(zcPlayerListener, this);
+        //permissionsEnabaled = setupPermissions();
         Reload();
         log.info(pluginName + "enabled");
     }
 
     public void Reload()
     {
-        List<World> worlds = getServer().getWorlds();
+//        List<World> worlds = getServer().getWorlds();
         File configFile = new File(getDataFolder() + "\\config.yml");
         if (configFile.canRead())
         {
@@ -130,129 +128,196 @@ public class ZeldaChickens extends JavaPlugin
         else
         {
             log.info(configFile.getPath() + " config file not found, creating file now");
+            writeConfigFile();
+//            config.addDefault("Global.displayPluginName", true);
+//            config.addDefault("Global.globalAnnouncement", publicMessage);
+//            config.addDefault("Global.playerWarning", privateMessage);
+//            config.addDefault("Global.victoryMessage", winningMessage);
+//            for(World world: worlds) 
+//            {
+//            	config.addDefault(world.getName() + ".enabled", state);
+//                config.addDefault(world.getName() + ".enabled", state);
+//                config.addDefault(world.getName() + ".poofAfterDeath", deathAfterDeath);
+//                config.addDefault(world.getName() + ".catchUpEnabled", catchUp);
+//                config.addDefault(world.getName() + ".swarmFeatherDrops", swarmDrops);
+//                config.addDefault(world.getName() + ".chickenMobSize", mobSize);
+//                config.addDefault(world.getName() + ".chickenDamage", mobDamage);
+//                config.addDefault(world.getName() + ".chickenHitsTrigger", chickenAttacksTrigger);
+//                config.addDefault(world.getName() + ".chickenHealth", chickHealth);
+//                config.addDefault(world.getName() + ".chickenAttackRange", damageDistance);
+//                config.addDefault(world.getName() + ".chickenSpawnHeight", spawnHeight);
+//                config.addDefault(world.getName() + ".maxOutRunDistance", maxDistance);
+//            }
+//            this.saveConfig();
+//            
+        }
+        config = this.getConfig();
+    }
+    
+
+    private void writeConfigFile()
+    {
+        File configFile = new File(getDataFolder()+ filePath);
+        File dir = new File(getDataFolder().toString());
+        if (!dir.exists())
+        {
+            dir.mkdir();
+            log.info(pluginName + " data directory created");
+        }
+        if (configFile.exists())
+        {
+            configFile.delete();
+        }
+        try
+        {
+            configFile.createNewFile();
             try
             {
-                configFile.createNewFile();
+                List<World> worlds = getServer().getWorlds();
+                PrintWriter out = new PrintWriter(new FileWriter(getDataFolder()+filePath));
+                out.println("#This is the configuration file for " + pluginName);
+                out.println("#");
+                out.println("#Global settings");
+                out.println("Global:");
+                out.println("    #Global announcement when a player has triggered a swarm. " +
+                		"use PLAYER to specify where you want the player name to show up");
+                out.println("    globalAnnoucement: " + publicMessage);
+                out.println("    #The meassage a player gets when the swarm spawns after that player");
+                out.println("    playerWarning: " + privateMessage);
+                out.println("    #The message a player gets when they finally defeat all " +
+                		"the chickens that were after that player");
+                out.println("    victoryMessage: " + winningMessage);
+                out.println("    #A simple boolean setting if the plugin name should display " +
+                		"as a prefix to any messages generated in game from this plugin");
+                out.println("    displayPluginName: " + "true");
+                
+                for(World world: worlds) 
+                {
+                    String worldName = world.getName();
+                    out.println("#For World " + worldName);
+                    out.println(worldName+":");
+                    out.println("#should the plugin be enabled?");
+                    out.println("#(valid values, true or false only) default: true, anythign but true or True will result in false");
+                    out.println("    enabled: "+state);
+                    out.println("#how many chickens should spawn?");
+                    out.println("#(valid values, anything above 0) default: 10");
+                    out.println("    chickenMobSize: "+mobSize);
+                    out.println("#how much damage should a chicken do?");
+                    out.println("#(valid values between 1-10) default: 1(or half heart)");
+                    out.println("    chickenDamage: "+mobDamage);
+                    out.println("#how many attacks on chicken(s) should it take before a mob spawns?");
+                    out.println("#(valid values, anything above 0) default: 2");
+                    out.println("    chickenHitsTrigger: "+chickenAttacksTrigger);
+                    out.println("#how close do chickens have to be to do damage?");
+                    out.println("#(valid values are and above 0.0) default: 1");
+                    out.println("    chickenAttackRange: " + damageDistance);
+                    out.println("#how far above the player should the chickens fall from onto unspecting players?");
+                    out.println("#(valid values, anything above 0) default: 1");
+                    out.println("    chickenSpawnHeight: "+spawnHeight);
+                    out.println("#are chickens allowed to 'catch-up' to a player if they are getting outrun?");
+                    out.println("#(valid values, true or false only) default: true, anythign but true or True will result in false");
+                    out.println("    catchUpEnabled: "+catchUp);
+                    out.println("#how far can a player outrun a chicken before it catches up? (respawns above player using chickenSpawnHeight.");
+                    out.println("#(valid values, anything above 0.0) default: 4.0");
+                    out.println("    maxOutRunDistance: "+maxDistance);
+                    out.println("#should chickens go poof after a player dies? (or retarget)");
+                    out.println("#(valid values, true or false only) default: false (meaning the chickens will go after a same target once he/she respawns)");
+                    out.println("    poofAfterDeath: "+deathAfterDeath);
+                    out.println("#how much health should chickens that 'spawn' should have?");
+                    out.println("#(valid values, 1 to 20) default: 4");
+                    out.println("    chickenHealth: " + chickHealth); 
+                    out.println("#should chickens summoned by this plugin be allowed to drop feathers upon death?");
+                    out.println("#(valid values, true or false only) default: false (no drops from summoned chickens)");
+                    out.println("    chickenSwarmDrops: " + swarmDrops); 
+                    out.println("#");
+                }
+                out.println("#permission nodes:");
+                out.println("#zc.chickenswarm <-- people with this permission (or *) will be suceptable to attacks. those without are immune");
+                out.println("#zc.admin.reload <-- people with this permission have acces to the zcreload command");
+                out.println("#zc.admin.swarmplayer <-- allows the use of the swarmplayer command");
+                out.println("#zc.admin.swarmthyself <-- allows the use of the swarmthyself command");
+                out.println("#zc.admin.zcstate <-- allows the use of the zcstate command");
+                out.println("#");
+                out.println("#commands:");
+                out.println("#zcswarmplayer <-- force a swarm attack on someone. warning bypasses the chickenswarm permission node");
+                out.println("#zcswarmthyself <-- force a swarm attack on yourself. warning bypasses the chickenswarm permission node");
+                out.println("#zcreload <-- reloads the configuration file");
+                out.println("#zcstate <-- toggles the plugin's state between on and off, you can use zcstate [on:off] as well");
+                out.println("#zchelp <-- displays the commands a player is allowed to use and how to use them");
+                out.println("#zeldachickens <-- displays basic info about the plugin");
+                out.close();
+                log.info(pluginName + " config file written to " + filePath);
             }
             catch (IOException e)
             {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.warning(pluginName + " unable to write to file at " + filePath);
             }
-            config = new Configuration(configFile);
-            config.setHeader("#Settings file for "+pluginName);
-            for(World world: worlds) 
-            {
-                //TODO for each world output a config setting and write to file as you go
-                config.setProperty(world.getName() + ".enabled", state);
-                config.setProperty(world.getName() + ".poofAfterDeath", deathAfterDeath);
-                config.setProperty(world.getName() + ".catchUpEnabled", catchUp);
-                config.setProperty(world.getName() + ".swarmFeatherDrops", swarmDrops);
-                config.setProperty(world.getName() + ".chickenMobSize", mobSize);
-                config.setProperty(world.getName() + ".chickenDamage", mobDamage);
-                config.setProperty(world.getName() + ".chickenHitsTrigger", chickenAttacksTrigger);
-                config.setProperty(world.getName() + ".chickenHealth", chickHealth);
-                config.setProperty(world.getName() + ".chickenAttackRange", damageDistance);
-                config.setProperty(world.getName() + ".chickenSpawnHeight", spawnHeight);
-                config.setProperty(world.getName() + ".maxOutRunDistance", maxDistance);
-            }//TODO: finish up manual settings
-            config.save();
-            config.getBoolean("Global.displayPluginName", true);
-            config.getString("Global.globalAnnouncement", publicMessage);
-            config.getString("Global.playerWarning", privateMessage);
-            config.getString("Global.victoryMessage", winningMessage);
-            config.save();
-            
         }
-        config = getConfiguration();
-        config.load();
-//        if ((config.getHeader()==null)||(!config.getHeader().equals("#Settings file for "+pluginName)))
+        catch(IOException ioe)
+        {
+            log.warning(pluginName + " unable to create config file");
+        }
+    }
+    
+
+//    public boolean onCommand(CommandSender sender, Command cmd,
+//            String commandLabel, String[] args)
+//    {
+//        ConsoleCommandSender console = null;
+//        Player player = null;
+//        if (sender instanceof ConsoleCommandSender)
 //        {
-//            config.setHeader("#Settings file for "+pluginName);
-//        }        
-        for(World world: worlds) 
-        {
-            int temp1;
-            double temp2;
-            config.getBoolean(world.getName() + ".enabled", state);
-            config.getBoolean(world.getName() + ".poofAfterDeath", deathAfterDeath);
-            config.getBoolean(world.getName() + ".catchUpEnabled", catchUp);
-            config.getBoolean(world.getName() + ".swarmFeatherDrops", swarmDrops);
-            temp1=config.getInt(world.getName() + ".chickenMobSize", mobSize);
-            if (temp1 <1)config.setProperty(world.getName() + ".chickenMobSize", mobSize);
-            temp1=config.getInt(world.getName() + ".chickenDamage", mobDamage);
-            if (temp1 <0)config.setProperty(world.getName() + ".chickenDamage", mobDamage);
-            temp1=config.getInt(world.getName() + ".chickenHitsTrigger", chickenAttacksTrigger);
-            if (temp1 <1)config.setProperty(world.getName() + ".chickenHitsTrigger", chickenAttacksTrigger);
-            temp1=config.getInt(world.getName() + ".chickenHealth", chickHealth);
-            if (temp1 <1)config.setProperty(world.getName() + ".chickenHealth", chickHealth);
-            temp2=config.getDouble(world.getName() + ".chickenAttackRange", damageDistance);
-            if (temp2 <0.5)config.setProperty(world.getName() + ".chickenAttackRange", damageDistance);
-            temp2=config.getDouble(world.getName() + ".chickenSpawnHeight", spawnHeight);
-            if (temp2 <0.5)config.setProperty(world.getName() + ".chickenSpawnHeight", spawnHeight);
-            temp2=config.getDouble(world.getName() + ".maxOutRunDistance", maxDistance);
-            if (temp2 <0.5)config.setProperty(world.getName() + ".maxOutRunDistance", maxDistance);
-        }
-        config.getBoolean("Global.displayPluginName", true);
-        config.getString("Global.globalAnnouncement", publicMessage);
-        config.getString("Global.playerWarning", privateMessage);
-        config.getString("Global.victoryMessage", winningMessage);
-    }
+//            console = (ConsoleCommandSender) sender;
+//            ZCcommands.consoleCommand(console, commandLabel, args);
+//        }
+//        if (sender instanceof Player)
+//        {
+//            player = (Player) sender;
+//            zcCommands.playerCommand(player, commandLabel, args);
+//        }
+//        return true;
+//    }
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command cmd,
-            String commandLabel, String[] args)
-    {
-        ConsoleCommandSender console = null;
-        Player player = null;
-        if (sender instanceof ConsoleCommandSender)
-        {
-            console = (ConsoleCommandSender) sender;
-            ZCcommands.consoleCommand(console, commandLabel, args);
-        }
-        if (sender instanceof Player)
-        {
-            player = (Player) sender;
-            zcCommands.playerCommand(player, commandLabel, args);
-        }
-        return true;
-    }
-
-    private boolean setupPermissions()
-    {
-        Plugin permissionsPlugin = this.getServer().getPluginManager()
-                .getPlugin("Permissions");
-        if (permissionHandler == null)
-        {
-            if (permissionsPlugin != null)
-            {
-                permissionHandler = ((Permissions) permissionsPlugin)
-                        .getHandler();
-                log.info(pluginName + "Permission system detected");
-                return true;
-            }
-            else
-            {
-                log.info(pluginName + "Permission system not detected");
-                return false;
-            }
-        }
-        log
-                .info(pluginName
-                        + "critical error in detecting Permissions. please advise author");
-        return false;
-    }
+//    private boolean setupPermissions()
+//    {
+//        Plugin permissionsPlugin = this.getServer().getPluginManager()
+//                .getPlugin("Permissions");
+//        if (permissionHandler == null)
+//        {
+//            if (permissionsPlugin != null)
+//            {
+//                permissionHandler = ((Permissions) permissionsPlugin)
+//                        .getHandler();
+//                log.info(pluginName + "Permission system detected");
+//                return true;
+//            }
+//            else
+//            {
+//                log.info(pluginName + "Permission system not detected");
+//                return false;
+//            }
+//        }
+//        log
+//                .info(pluginName
+//                        + "critical error in detecting Permissions. please advise author");
+//        return false;
+//    }
 
     protected List<World> getWorlds()
     {
         return getServer().getWorlds();
     }
+    
     protected static void sendMessage(String inputMessage, CommandSender messagee)
     {
         String message=inputMessage;
+        if (message == null)
+        {
+            message="problem detecting message, null recieved";
+        }
         if (message.equalsIgnoreCase("false"))
         {
-            return;
+            message="problem detecting message, false recieved";
         }
         if (config.getBoolean("Global.displayPluginName", true))
         {
@@ -265,11 +330,15 @@ public class ZeldaChickens extends JavaPlugin
             Player victim)
     {
         String message=inputMessage;
+        if (message == null)
+        {
+            message="problem detecting message, null recieved";
+        }
         if (message.equalsIgnoreCase("false"))
         {
-            return;
+            message="problem detecting message, false recieved";
         }
-        message=message.replaceAll(":player:", victim.getDisplayName());
+        message=message.replaceAll("PLAYER", victim.getDisplayName());
         if (config.getBoolean("Global.displayPluginName", true))
         {
             message=pluginName+message;

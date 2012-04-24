@@ -5,13 +5,23 @@ import java.util.Vector;
 import org.bukkit.Location;
 import org.bukkit.entity.Chicken;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityListener;
+
+//import org.bukkit.Location;
+//import org.bukkit.entity.Chicken;
+//import org.bukkit.entity.Player;
+//import org.bukkit.event.entity.EntityDamageByEntityEvent;
+//import org.bukkit.event.entity.EntityDamageEvent;
+//import org.bukkit.event.entity.EntityDeathEvent;
+//import org.bukkit.event.entity.EntityListener;
 
 
-public class ZCEntityListener extends EntityListener
+public class ZCEntityListener implements Listener
 {
 	public ZeldaChickens ZCP;
 	public Vector<ZCplayer> players = new Vector<ZCplayer>();
@@ -21,8 +31,8 @@ public class ZCEntityListener extends EntityListener
 	{
 	    ZCP = instance;
 	}
-
-    @Override
+	
+	@EventHandler(priority=EventPriority.MONITOR)
     public void onEntityDeath(EntityDeathEvent event)
     {
         if(ZeldaChickens.config.getBoolean(event.getEntity().getLocation().getWorld().getName() + ".swarmFeatherDrops", ZeldaChickens.swarmDrops))
@@ -54,54 +64,61 @@ public class ZCEntityListener extends EntityListener
         }
     }
 
-    @Override
+	@EventHandler(priority=EventPriority.MONITOR)
     public void onEntityDamage(EntityDamageEvent event)
-	{
+	{//!event.isCancelled() && ZeldaChickens.config.getBoolean(event.getEntity().getWorld().getName() + ".enabled", ZeldaChickens.state)
 	    ZCplayer zcPlayer = null;
-		if(!event.isCancelled() && ZeldaChickens.config.getBoolean(event.getEntity().getWorld().getName() + ".enabled", ZeldaChickens.state))
+		if(true)
 		{
-				EntityDamageByEntityEvent EDBEevent = null;
-				Player player = null;
-				boolean passedChecks = true;
-				if (event instanceof EntityDamageByEntityEvent)
+			EntityDamageByEntityEvent EDBEevent = null;
+			Player player = null;
+			boolean passedChecks = true;
+			if (event instanceof EntityDamageByEntityEvent)
+			{
+				EDBEevent = (EntityDamageByEntityEvent) event;
+				if (EDBEevent.getDamager() instanceof Player && EDBEevent.getEntity() instanceof Chicken)
 				{
-					EDBEevent = (EntityDamageByEntityEvent) event;
-					if (EDBEevent.getDamager() instanceof Player && EDBEevent.getEntity() instanceof Chicken)
+					player = (Player) EDBEevent.getDamager();
+					zcPlayer = getZCplayer(player);
+					if (zcPlayer == null)
 					{
-						player = (Player) EDBEevent.getDamager();
-						zcPlayer = getZCplayer(player);
-						if (zcPlayer == null)
-						{
-						    passedChecks=false;
-						    ZCP.log.info(ZeldaChickens.pluginName + "issue retrieving player from somewhere, please advise author");
-						}
-					}
-					else
-					{
-						passedChecks=false;
+					    passedChecks=false;
+					    ZCP.log.info(ZeldaChickens.pluginName + "issue retrieving player from somewhere, please advise author");
 					}
 				}
 				else
 				{
 					passedChecks=false;
 				}
-				if (passedChecks)
-				{
-				    int chickenAttacksTrigger = ZeldaChickens.config.getInt(event.getEntity().getWorld().getName()+".chickenHitsTrigger", ZeldaChickens.chickenAttacksTrigger);
-					if (ZCP.permissionsEnabaled)
+			}
+			else
+			{
+				passedChecks=false;
+			}
+			if (passedChecks)
+			{
+			    int chickenAttacksTrigger = ZeldaChickens.config.getInt(event.getEntity().getWorld().getName()+".chickenHitsTrigger", ZeldaChickens.chickenAttacksTrigger);
+			    //TODO: fix up permissions
+//					if (ZCP.permissionsEnabaled)
+//					{
+//						if((ZCP).permissionHandler.has(player, "zc.chickenswarm"))
+//						{
+//							if (zcPlayer.chickens == null) zcPlayer.chickenAttacks++;
+//							if (zcPlayer.chickenAttacks >= chickenAttacksTrigger) summonChickensOnPlayer(zcPlayer);
+//						}
+//					}
+//					else
+//					{
+					if (zcPlayer.chickens == null) 
 					{
-						if((ZCP).permissionHandler.has(player, "zc.chickenswarm"))
-						{
-							if (zcPlayer.chickens == null) zcPlayer.chickenAttacks++;
-							if (zcPlayer.chickenAttacks >= chickenAttacksTrigger) summonChickensOnPlayer(zcPlayer);
-						}
+					    zcPlayer.chickenAttacks++;
 					}
-					else
+					if (zcPlayer.chickenAttacks >= chickenAttacksTrigger)
 					{
-						if (zcPlayer.chickens == null) zcPlayer.chickenAttacks++;
-						if (zcPlayer.chickenAttacks >= chickenAttacksTrigger) summonChickensOnPlayer(zcPlayer);
+					    summonChickensOnPlayer(zcPlayer);
 					}
-				}
+//					}
+			}
 		}
 	}
 	

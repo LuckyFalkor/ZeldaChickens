@@ -3,7 +3,7 @@ package com.icomeinpieces.ZeldaChickens;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Chicken;
-import org.bukkit.entity.CreatureType;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 public class ZCchicken implements Runnable 
@@ -23,9 +23,10 @@ public class ZCchicken implements Runnable
 	@Override
 	public void run() 
 	{
-		chicken.setTarget(player);
+		//chicken.setTarget(player);
 		while(!chicken.isDead())
 		{
+		    chicken.setTarget(player);
 			if(chicken.getTarget() != null)
 			{
 				Double xDistance = Math.abs(player.getLocation().getX() - chicken.getLocation().getX());
@@ -87,7 +88,7 @@ public class ZCchicken implements Runnable
         if(chicken.getLocation().getWorld() != locale.getWorld())
         {
             Chicken temp = chicken;
-            chicken=(Chicken) locale.getWorld().spawnCreature(locale, CreatureType.CHICKEN);
+            chicken=(Chicken) locale.getWorld().spawnCreature(locale, EntityType.CHICKEN);
             chicken.setHealth(temp.getHealth());
             temp.remove();
         }

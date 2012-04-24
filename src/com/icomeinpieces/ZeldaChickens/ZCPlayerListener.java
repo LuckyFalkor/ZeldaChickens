@@ -1,12 +1,14 @@
 package com.icomeinpieces.ZeldaChickens;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
-public class ZCPlayerListener extends PlayerListener
+public class ZCPlayerListener implements Listener
 {
 	private ZeldaChickens ZCP;
 	public ZCPlayerListener(ZeldaChickens instance) 
@@ -14,6 +16,7 @@ public class ZCPlayerListener extends PlayerListener
 		ZCP = instance;
 	}
 
+	@EventHandler(priority=EventPriority.MONITOR)
 	public void onPlayerQuit(PlayerQuitEvent event)
 	{
 	    if (event.getPlayer() instanceof Player)
@@ -33,7 +36,7 @@ public class ZCPlayerListener extends PlayerListener
 	    }
 	}
 
-    @Override
+	@EventHandler(priority=EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event)
     {
         if (event.getPlayer() instanceof Player)
@@ -42,7 +45,7 @@ public class ZCPlayerListener extends PlayerListener
         }
     }
 
-    @Override
+	@EventHandler(priority=EventPriority.MONITOR)
 	public void onPlayerRespawn(PlayerRespawnEvent event) 
 	{
         if(event.getPlayer() instanceof Player)

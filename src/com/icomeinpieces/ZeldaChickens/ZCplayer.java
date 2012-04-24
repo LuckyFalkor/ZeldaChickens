@@ -2,7 +2,7 @@ package com.icomeinpieces.ZeldaChickens;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Chicken;
-import org.bukkit.entity.CreatureType;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 public class ZCplayer
@@ -24,7 +24,9 @@ public class ZCplayer
         Player victim=null;
         for (Player playerInList : playerList)
         {
-            if (playerInList.getEntityId()==player.getEntityId())
+            int playerInListID = playerInList.getEntityId();
+            int playerID = player.getEntityId();
+            if (playerInListID==playerID)
             {
                 ZeldaChickens.sendMessage(ZeldaChickens.config.getString("Global.playerWarning"), playerInList);
                 victim = playerInList;
@@ -38,7 +40,7 @@ public class ZCplayer
         chickens = new ZCchicken[mobSize];
         while (spawnCount < mobSize)
         {
-            Chicken chicken = (Chicken) locale.getWorld().spawnCreature(locale, CreatureType.CHICKEN);
+            Chicken chicken = (Chicken) locale.getWorld(). spawnCreature(locale, EntityType.CHICKEN);
             chickens[spawnCount]=new ZCchicken(player, chicken, this);
             Thread ZCC=new Thread(chickens[spawnCount]);
             ZCC.start();

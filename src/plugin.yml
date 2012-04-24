@@ -21,3 +21,11 @@ commands:
     zeldachickens:
         description: gets information on zeldachicken commands
         usage: /<command>
+permissions:
+    zc.*:
+        description: gives access to all ZeldaChickens commands
+        children:
+            zc.chickenswarm: true
+    zc.chickenswarm:
+        description: specifies if a player can get chased by chickens
+        default: true
